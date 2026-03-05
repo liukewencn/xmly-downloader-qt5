@@ -1,53 +1,53 @@
-名称：构建 xmly-downloader-qt5 绿色版
+name: Build xmly-downloader-qt5 绿色版
 
-在:
-  推:
-    分支：[ 主 ]
-  工作流触发:
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-工作:
-  构建:
-    运行于：Windows-latest
-    步骤:
-      - 使用：actions/checkout@v4
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: 安装 Go
-        使用：actions/setup-go@v5
-        与：
-          go-version："1.21"
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
 
       - name: 安装 Qt5.15
-        使用：jurplel/install-qt-action@v4
-        与：
-          版本："5.15.2"
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "5.15.2"
           arch: "win64_msvc2019_64"
 
       - name: 编译 Go 静态库
-        运行: |
+        run: |
           cd src/cgoqt
           go build -buildmode=c-archive -o xmlydownloader.a
 
       - name: 编译 Qt 程序
-        运行: |
-          cd 源文件夹
+        run: |
+          cd src
           qmake xmly-downloader-qt5.pro
           nmake
 
-      - 名称: 拷贝 exe 到发布目录
-        运行: |
-          创建发布目录
-          复制src\release\xmly-downloader-qt5.exe到发布目录
+      - name: 拷贝 exe 到发布目录
+        run: |
+          mkdir publish
+          copy src\release\xmly-downloader-qt5.exe publish\
 
       - name: 使用 windeployqt 自动拷贝所有Qt依赖DLL
-        运行: |
-          wdeployqt publish\xmly-downloader-qt5.exe
+        run: |
+          windeployqt publish\xmly-downloader-qt5.exe
 
-      - 名称: 打包成 ZIP
-        运行: |
-          powershell 压缩档案 - 路径 publish\* - 目标路径 xmly-downloader-qt5-green.zip
+      - name: 打包成 ZIP
+        run: |
+          powershell Compress-Archive -Path publish\* -DestinationPath xmly-downloader-qt5-green.zip
 
-      - 名称: 上传最终绿色版
-        使用：actions/upload-artifact@v4
-        与：
-          name：xmly-downloader-qt5-green
-          路径: xmly-downloader-qt5-green.zip
+      - name: 上传最终绿色版
+        uses: actions/upload-artifact@v4
+        with:
+          name: xmly-downloader-qt5-green
+          path: xmly-downloader-qt5-green.zip
